@@ -94,7 +94,7 @@ class Search extends React.Component {
 
     return (
       <StyledSearchWrap>
-        <h1>Search</h1>
+        <h1>p4ktldr</h1>
         <Autosuggest
           suggestions={suggestions}
           onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
