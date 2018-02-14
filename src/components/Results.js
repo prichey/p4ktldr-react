@@ -21,9 +21,10 @@ const getAlbumsByArtistFromSearch = (allAlbums, searchArtist) => {
           return albumArtist.id === searchArtist.id;
         }).length > 0
       ) {
+        const rating = Number(review.rating.display_rating);
         albums.push({
           id: review.id,
-          rating: Number(review.rating.display_rating),
+          rating: rating === 10 ? rating : rating.toFixed(1),
           url: possibleMultiReviews.url,
           name: review.album.display_name
         });
