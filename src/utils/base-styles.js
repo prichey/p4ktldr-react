@@ -15,7 +15,10 @@ export default () => {
 
     .react-autosuggest__container--open {}
 
-    .react-autosuggest__input {}
+    .react-autosuggest__input {
+      width: 100%;
+      padding: 0.5em;
+    }
 
     .react-autosuggest__input--open {}
 

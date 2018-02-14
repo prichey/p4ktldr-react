@@ -1,35 +1,53 @@
 import React from 'react';
 import styled from 'styled-components';
 
+import { filter, unescape } from 'lodash';
+
 import AlbumList from './AlbumList';
 
 const StyledResultsWrap = styled.section``;
 
-const getAlbumsByArtist = artist => {
-  return fetch(
-    `https://pitchfork.com/api/v2/search/more/?query=${artist}&filter=albumreviews&size=100&start=0`
-  )
-    .then(res => res.json())
-    .then(json => {
-      // console.log(json);
-      return json.results.list;
+const getAlbumsByArtistFromSearch = (allAlbums, searchArtist) => {
+  const albums = [];
+
+  // some album review objects are comprised of multiple individual albums
+  allAlbums.map(possibleMultiReviews => {
+    // console.log(possibleMultiReviews);
+    possibleMultiReviews.tombstone.albums.map(review => {
+      // console.log(review);
+      if (
+        filter(review.album.artists, albumArtist => {
+          // console.log(albumArtist.id, searchArtist.id);
+          return albumArtist.id === searchArtist.id;
+        }).length > 0
+      ) {
+        albums.push({
+          id: review.id,
+          rating: Number(review.rating.display_rating),
+          url: possibleMultiReviews.url,
+          name: review.album.display_name
+        });
+      }
+      return true;
     });
+    return true;
+  });
+
+  console.log(albums);
+  return albums;
 };
 
-// const getAlbumsByArtistID = id => {
-//   return fetch(
-//     `https://pitchfork.com/api/v2/entities/artists/${id}/albumreviews/`
-//   )
-//     .then(res => res.json())
-//     .then(json => {
-//       console.log(json);
-//       if (json.count > 0) {
-//         return json.results.list;
-//       } else {
-//         return null;
-//       }
-//     });
-// };
+const getAlbumsByArtist = artist => {
+  const url = `https://pitchfork.com/api/v2/search/more/?query=${escape(
+    artist.name
+  )}&filter=albumreviews&size=100&start=0`;
+  console.log(url);
+  return fetch(url)
+    .then(res => res.json())
+    .then(json => {
+      return getAlbumsByArtistFromSearch(json.results.list, artist);
+    });
+};
 
 class Results extends React.Component {
   constructor(props, context) {
@@ -37,21 +55,24 @@ class Results extends React.Component {
 
     this.state = {
       albums: [],
-      selection: props.selection
+      selection: props.selection,
+      loading: false
     };
   }
 
   componentDidMount() {
     console.log('mount');
-    if (this.state.selection.name) {
-      getAlbumsByArtist(this.state.selection.name)
+    if (this.state.selection) {
+      this.setState({ loading: true });
+      getAlbumsByArtist(this.state.selection)
         // .then(albums => console.log)
-        .then(albums => this.setState({ albums: albums }))
+        .then(albums => this.setState({ albums: albums, loading: false }))
         .catch(e => {
           console.log(e);
-          // this.setState({ albums: null });
+          this.setState({ loading: false });
         });
     } else {
+      this.setState({ loading: false });
       return;
     }
     return;
@@ -87,11 +108,11 @@ class Results extends React.Component {
     if (this.state.selection) {
       return (
         <StyledResultsWrap>
-          <h1>{this.state.selection.name}</h1>
+          <h1>{unescape(this.state.selection.name)}</h1>
           {this.state.albums.length > 0 ? (
             <AlbumList albums={this.state.albums} />
           ) : (
-            <h3>No albums</h3>
+            <h3>{this.state.loading ? 'Loading...' : 'No reviews.'}</h3>
           )}
         </StyledResultsWrap>
       );

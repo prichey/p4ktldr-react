@@ -3,6 +3,8 @@ import Autosuggest from 'react-autosuggest';
 import styled from 'styled-components';
 import fetch from 'node-fetch';
 
+import { unescape } from 'lodash';
+
 import Results from './Results';
 
 const StyledSearchWrap = styled.section``;
@@ -15,9 +17,9 @@ const getSuggestions = value => {
     });
 };
 
-const getSuggestionValue = suggestion => suggestion.name;
+const getSuggestionValue = suggestion => unescape(suggestion.name);
 
-const renderSuggestion = suggestion => <div>{suggestion.name}</div>;
+const renderSuggestion = suggestion => <div>{unescape(suggestion.name)}</div>;
 
 class Search extends React.Component {
   constructor() {
@@ -32,6 +34,7 @@ class Search extends React.Component {
   }
 
   onChange = (event, { newValue }) => {
+    console.log('change');
     this.setState({
       value: newValue,
       selection: null
@@ -39,6 +42,8 @@ class Search extends React.Component {
   };
 
   onSuggestionsFetchRequested = ({ value }) => {
+    this.setState({ selection: null });
+
     getSuggestions(value)
       .then(suggestions => {
         this.setState({
@@ -54,6 +59,7 @@ class Search extends React.Component {
   };
 
   onSuggestionsClearRequested = () => {
+    console.log('clear');
     this.setState({
       suggestions: []
     });
@@ -82,7 +88,7 @@ class Search extends React.Component {
 
     const inputProps = {
       placeholder: '',
-      value,
+      value: value,
       onChange: this.onChange
     };
 
